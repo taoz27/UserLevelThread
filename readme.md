@@ -4,7 +4,7 @@
 
 所以大致可以分为四个模块：调度器、线程、睡眠函数、异常处理。
 
-##线程调度器的实现
+## 线程调度器的实现
 
 调度器的实现可以分为创建、销毁、添加线程、开始调度四部分，如下：
 	
@@ -24,8 +24,6 @@
 	}*utSch;
 
 线程调度器的创建、销毁及添加线程都比较简单，在此不做赘述。只写一下调度的实现过程。
-
-#图片
 
 ![](https://github.com/taoz27/UserLevelThread/blob/master/png/1.png?raw=true)
 
@@ -69,7 +67,7 @@
 
 检查当前线程与检查睡眠线程都比较简单，不再赘述。
 
-##线程的实现
+## 线程的实现
 
 线程的实现可以分为线程创建、销毁、继续运行、交权四个部分，如下：
 
@@ -124,12 +122,12 @@
 
 随后判断当前线程是否被调度过，因为如果没有调度过，便没有上下文可以来恢复。如果没有，那么就调用线程函数，开始调度；如果曾调度过，并且未曾执行完毕，那么就不应重新执行，而应当从上下文寄存器中恢复寄存器，从断点处继续运行。
 
-#图片
+![](https://github.com/taoz27/UserLevelThread/blob/master/png/2.png?raw=true)
 
 而在运行过程中，函数可能会调用yield()，此时保存线程寄存器到regs中，并将调度器的上下文寄存器恢复，让权给调度器；如果调用sleep()，则保存线程寄存器到regs中，保存睡眠变量，改变状态为statusSleep，并将调度器的上下文寄存器恢复，让权给调度器；如果函数执行完毕，则会自动返回到调用函数的地方，从那里继续运行，修改状态为statusFinish，并将调度器上下文寄存器恢复，让权给调度器。
 
 
-##线程的完善
+## 线程的完善
 
 正如上一章所看到的，一般函数的汇编代码中添加了一些优化代码，用于控制堆栈平衡及预留局部变量空间，而我们在写线程函数时，这些优化代码会对我们的代码产生极大的影响，这个时候我们就要使用裸函数。
 
@@ -203,7 +201,7 @@
 
 在执行call时，会自动将call之后的下一条指令地址（即返回地址）push到线程自己的栈当中，那么在线程运行结束之后，ret时会自动返回到此处calleax后的下一条指令。当程序运行到这里时，我们就可以确定线程必定已执行完毕，那么就可以置状态位为finish了。
 
-第7章YIELD与SLEEP
+## YIELD与SLEEP
 
 函数在调用yield()之后，表明其执行时间段已经完毕，希望将控制权交给调度器，去调度其他线程。
 
@@ -250,7 +248,7 @@
 
 随后在获取当前时间时，直接callGetTickCount，由第5章可知，其会将返回值保存在eax寄存器中，所以从eax中可以获取当前时间。
 
-##异常处理
+## 异常处理
 
 在线程发生异常时，操作系统会设法调用用户定义的回调函数，这个函数可以做任何事情，但最终他必须返回一个值，来告诉操作系统接下来去做什么。这个回调函数原型如下：
 
@@ -296,11 +294,11 @@
 
 每个线程都有自己的异常处理程序回调函数，每个线程都有一个很重要的数据结构，即线程信息块（TIB或TEB）。TIB中的第一个DWORD是指向该线程的EXCEPTION\_REGISTRATION结构的指针。在Intel Win32平台上，FS寄存器始终指向当前的TIB。因此，通过FS：[0]可以找到一个指向EXCEPTION\_REGISTRATION结构的指针。
 
- ##图片
+![](https://github.com/taoz27/UserLevelThread/blob/master/png/3.png?raw=true)
 
 所以，将所有的都串起来，并结合下图，当程序发生异常时，操作系统首先通过线程信息块TIB（即FS:[0]）找到第一个异常处理表EXCEPTION\_REGISTRATION，每个EXCEPTION\_REGISTRATION包含两个变量，异常回调指针handler和next指针（这里有的说是next，有的说是prev），在回调函数执行完毕后，通过返回值确定是恢复线程运行还是继续查找回调函数。
 
- ##图片
+![](https://github.com/taoz27/UserLevelThread/blob/master/png/4.png?raw=true)
 
 所以简单实现以下异常处理try…cache。
 
@@ -356,20 +354,18 @@
 
 在异常回调函数中的处理是，直接恢复发生异常前的寄存器，然后返回到cache中，即可。
 
-##实现效果
-
-
+## 实现效果
 最终运行效果如下：
-##图片
+![](https://github.com/taoz27/UserLevelThread/blob/master/png/5.png?raw=true)
 
 由于是后添加的异常线程，所以先执行异常线程，执行时打印&quot;MakeError&quot;，然后开始产生除0错误和越界错误，当检测到错误后回去执行异常处理函数，打印&quot;ErrorOccurred&quot;表明检测到异常，并开始恢复异常前的寄存器，恢复后，会杀掉出错线程，所以异常函数中的打印&quot;ErrorClear&quot;并没有执行。
 
 之后开始调度睡眠线程执行，执行后处于睡眠状态，五秒内不再调度他。随后递归线程、普通线程2、普通线程1开始交替执行。
 
- ##图片
+![](https://github.com/taoz27/UserLevelThread/blob/master/png/6.png?raw=true)
 
 我设置了循环次数为100次，可以看到，所有的其他线程都执行完了，过了一会，睡眠线程又开始执行，并结束了。睡眠线程开始时间为6s的时候（图1中sec-6），结束时间为11s的时候（图2中sec-11），中间刚好相差5秒。
-##参考
+## 参考
 1. [**https://en.wikipedia.org/wiki/Win32\_Thread\_Information\_Block**](https://en.wikipedia.org/wiki/Win32_Thread_Information_Block)
 **Win32 Thread Information Block-wikipedia**
 2. [**http://bytepointer.com/resources/pietrek\_crash\_course\_depths\_of\_win32\_seh.htm**](http://bytepointer.com/resources/pietrek_crash_course_depths_of_win32_seh.htm)
