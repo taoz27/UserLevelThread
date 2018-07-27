@@ -6,7 +6,7 @@
 在每次调度了某个线程一次后，都会来检测一下当前线程的状态，以便及时将睡眠、执行完毕线程切换到相应链表 <?貌似用队列更好一些吧?> 中
 */
 void checkCurrent(uThd* prev,uThd* current,utSch sch) {
-	if ((*current)->status == UtStatusNormal) {
+	if ((*current)->status == UtStatusUnstart||(*current)->status == UtStatusNormal) {
 		//由于其他两种情况（sleep、finish）下都会导致寻找下一个可执行线程必须用prev->next，所以这里这么做可以统一
 		//切换为队列会更好
 		(*prev) = (*prev)->next;
@@ -38,6 +38,7 @@ void checkSleepUthd(utSch sch) {
 			utSleepPrev->next = utSleep->next;
 			utSleep->next = sch->uThdNormal->next;
 			sch->uThdNormal->next = utSleep;
+			utSleep->status = UtStatusNormal;
 			utSleep = utSleepPrev->next;
 		}
 		else {
@@ -121,7 +122,7 @@ void utSchStart(utSch sch) {
 				jmp rightc;//正常情况下，直接跳出该块
 			cachec:
 				mov eax, dword ptr[current];
-				mov dword ptr[eax + 34h], 2;//将当前线程结束
+				mov dword ptr[eax + 30h], 3;//将当前线程结束
 			rightc:
 				mov eax, [esp];
 				mov fs : [0], eax;
