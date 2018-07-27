@@ -110,6 +110,16 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="register.h" />
+    <ClInclude Include="utexcept.h" />
+    <ClInclude Include="uthread.h" />
+    <ClInclude Include="utscheduler.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="main.c" />
+    <ClCompile Include="utexcept.c" />
+    <ClCompile Include="uthread.c" />
+    <ClCompile Include="utscheduler.c" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
