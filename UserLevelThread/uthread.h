@@ -4,14 +4,6 @@
 
 typedef void(*function)();
 
-////线程状态
-//enum UtStatus {
-//	UtStatusUnstart = 0,
-//	UtStatusNormal = 1,
-//	UtStatusSleep = 2,
-//	UtStatusFinish = 3
-//};
-
 typedef struct uThread{
 	registers regs;//ebp 0h和局部变量有关,esp 4h始终指向堆栈顶,ebx 8h,edi ch,esi 10h,eip 14h指向下一个指令的地址
 	function func;//18h 函数
@@ -20,8 +12,7 @@ typedef struct uThread{
 	DWORD sleepTime;//24h 睡眠开始时间---只在status为UtStatusSleep时起作用
 	DWORD sleepDuri;//28h 睡眠持续时间---只在status为UtStatusSleep时起作用
 	struct uThread * next;//2ch 指向调度器中的下一个线程，这里设计的有缺陷
-	//int hasRun;//30h 线程是否已开始执行，设计的不合理，应合并到status中
-	int status;//34h 线程状态
+	int status;//30h 线程状态
 }*uThd;
 
 registers pregs;//线程外部环境的上下文，即调度器

@@ -118,15 +118,11 @@ int add(int op1, int op2) {
 }
 
 int main() {
-	//int res = add(1, 2);
-
-	/**/
 	init();
 	printf("-------------------------Test Start-------------------------\n");
 	utSchStart(sch);//开始调度
 	utSchedulerDestory(sch);//销毁调度器，释放内存
 	printf("-------------------------Test End-------------------------\n");
-	/**/
 
 	system("pause");
 	return 0;
